@@ -110,6 +110,7 @@ _C.DEBUG.SAVE_HEATMAPS_PRED = False
 
 _C.NL = CN()
 _C.NL.USE = True
+_C.NL.ASPP = False
 _C.NL.in_channels = 720
 _C.NL.out_channels = 720
 _C.NL.type = 'nl_bn'
