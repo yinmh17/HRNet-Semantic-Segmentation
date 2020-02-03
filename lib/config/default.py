@@ -108,6 +108,18 @@ _C.DEBUG.SAVE_BATCH_IMAGES_PRED = False
 _C.DEBUG.SAVE_HEATMAPS_GT = False
 _C.DEBUG.SAVE_HEATMAPS_PRED = False
 
+_C.NL = CN()
+_C.NL.USE = True
+_C.NL.in_channels = 720
+_C.NL.out_channels = 720
+_C.NL.type = 'nl_bn'
+_C.NL.downsample = False
+_C.NL.whiten_type = ['channel']
+_C.NL.temp = 0.05
+_C.NL.with_gc = True
+_C.NL.use_out = False
+_C.NL.out_bn = False
+
 
 def update_config(cfg, args):
     cfg.defrost()
