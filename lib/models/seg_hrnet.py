@@ -19,7 +19,7 @@ import torch.nn as nn
 import torch._utils
 import torch.nn.functional as F
 from .Nonlocal import NonLocal2d_bn
-
+from torch.autograd import Variable
 BatchNorm2d = nn.BatchNorm2d
 BN_MOMENTUM = 0.01
 logger = logging.getLogger(__name__)
@@ -289,6 +289,81 @@ class GCBModule(nn.Module):
 
         output = self.bottleneck(torch.cat([x, output], 1))
         return output
+        
+class ASP_GCBModule(nn.Module):
+    def __init__(self, in_features, out_features, num_classes, config, dilations=(12, 24, 36)):
+        super(ASP_GCBModule, self).__init__()
+        type = config.NL.type
+        assert type in ['gcb', 'nl', 'nl_bn', 'nl_nowd', 'nl_nowd_mask', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'mask_nl']
+        features=in_features
+        out_features = in_features // 2
+        if type == 'gcb':
+            self.ctb = ContextBlock(out_features, ratio=1./4)
+        elif type == 'nl':
+            self.ctb = NonLocal2d(out_features, out_features // 2, downsample=config.NL.downsample, use_out=config.NL.use_out, out_bn=config.NL.out_bn)
+        elif type == 'nl_bn':
+            self.ctb = NonLocal2d_bn(out_features, out_features // 2, downsample=config.NL.downsample, whiten_type=config.NL.whiten_type,
+                                     temperature=config.NL.temp, with_gc=config.NL.with_gc, use_out=config.NL.use_out, out_bn=config.NL.out_bn)
+                                     
+        self.context = nn.Sequential(nn.Conv2d(features, out_features, kernel_size=3, padding=1, dilation=1, bias=True),
+                                       BatchNorm2d(out_features, momentum=BN_MOMENTUM),
+                                       nn.ReLU(inplace=True),
+                                       self.ctb)
+        self.conv2 = nn.Sequential(nn.Conv2d(features, out_features, kernel_size=1, padding=0, dilation=1, bias=False),
+                                   BatchNorm2d(out_features, momentum=BN_MOMENTUM),
+                                   nn.ReLU(inplace=True)
+                                   )
+        self.conv3 = nn.Sequential(nn.Conv2d(features, out_features, kernel_size=3, padding=dilations[0], dilation=dilations[0], bias=False),
+                                   BatchNorm2d(out_features, momentum=BN_MOMENTUM),
+                                   nn.ReLU(inplace=True)
+                                   )
+        self.conv4 = nn.Sequential(nn.Conv2d(features, out_features, kernel_size=3, padding=dilations[1], dilation=dilations[1], bias=False),
+                                   BatchNorm2d(out_features, momentum=BN_MOMENTUM),
+                                   nn.ReLU(inplace=True)
+                                   )
+        self.conv5 = nn.Sequential(nn.Conv2d(features, out_features, kernel_size=3, padding=dilations[2], dilation=dilations[2], bias=False),
+                                   BatchNorm2d(out_features, momentum=BN_MOMENTUM),
+                                   nn.ReLU(inplace=True)
+                                   )
+
+        self.conv_bn_dropout = nn.Sequential(
+            nn.Conv2d(out_features * 5, 512, kernel_size=1, padding=0, dilation=1, bias=False),
+            BatchNorm2d(512, momentum=BN_MOMENTUM),
+            nn.Dropout2d(0.1),
+            nn.Conv2d(512, num_classes, kernel_size=1, stride=1, padding=0, bias=True),
+            )
+            
+
+    def _cat_each(self, feat1, feat2, feat3, feat4, feat5):
+        assert(len(feat1)==len(feat2))
+        z = []
+        for i in range(len(feat1)):
+            z.append(torch.cat((feat1[i], feat2[i], feat3[i], feat4[i], feat5[i]), 1))
+        return z
+
+    def forward(self, x):
+        if isinstance(x, Variable):
+            _, _, h, w = x.size()
+        elif isinstance(x, tuple) or isinstance(x, list):
+            _, _, h, w = x[0].size()
+        else:
+            raise RuntimeError('unknown input type')
+
+        feat1 = self.context(x)
+        feat2 = self.conv2(x)
+        feat3 = self.conv3(x)
+        feat4 = self.conv4(x)
+        feat5 = self.conv5(x)
+
+        if isinstance(x, Variable):
+            out = torch.cat((feat1, feat2, feat3, feat4, feat5), 1)
+        elif isinstance(x, tuple) or isinstance(x, list):
+            out = self._cat_each(feat1, feat2, feat3, feat4, feat5)
+        else:
+            raise RuntimeError('unknown input type')
+
+        output = self.conv_bn_dropout(out)
+        return output
 
 class HighResolutionNet(nn.Module):
 
@@ -343,8 +418,9 @@ class HighResolutionNet(nn.Module):
             self.stage4_cfg, num_channels, multi_scale_output=True)
         
         last_inp_channels = np.int(np.sum(pre_stage_channels))
+        
         if not config.NL.USE:
-            self.last_layer = nn.Sequential(
+            self.head = nn.Sequential(
                 nn.Conv2d(
                     in_channels=last_inp_channels,
                     out_channels=last_inp_channels,
@@ -360,9 +436,18 @@ class HighResolutionNet(nn.Module):
                     stride=1,
                     padding=1 if extra.FINAL_CONV_KERNEL == 3 else 0)
             )
-        if config.NL.USE:
+        elif config.NL.USE and config.NL.ASPP:
+            self.head = nn.Sequential(
+                nn.Conv2d(config.NL.in_channels, config.NL.in_channels//2, kernel_size=3, stride=1, padding=1),
+                BatchNorm2d(config.NL.in_channels//2, momentum=BN_MOMENTUM),
+                nn.ReLU(inplace=True),
+                ASP_GCBModule(config.NL.in_channels//2, config.NL.out_channels, config.DATASET.NUM_CLASSES, config),
+                )
+                
+        elif config.NL.USE:
             self.head = GCBModule(config.NL.in_channels, config.NL.out_channels, config.DATASET.NUM_CLASSES, config)
         self.use_nl=config.NL.USE
+        self.aspp=config.NL.ASPP
 
     def _make_transition_layer(
             self, num_channels_pre_layer, num_channels_cur_layer):
@@ -488,10 +573,7 @@ class HighResolutionNet(nn.Module):
         
 
         x = torch.cat([x[0], x1, x2, x3], 1)
-        if self.use_nl:
-            x=self.head(x)
-        else:
-            x = self.last_layer(x)
+        x=self.head(x)
 
         return x
 
@@ -520,4 +602,3 @@ def get_seg_model(cfg, **kwargs):
     model.init_weights(cfg.MODEL.PRETRAINED)
 
     return model
-
