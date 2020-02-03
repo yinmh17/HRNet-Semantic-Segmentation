@@ -18,6 +18,7 @@ import torch
 import torch.nn as nn
 import torch._utils
 import torch.nn.functional as F
+from .Nonlocal import NonLocal2d_bn
 
 BatchNorm2d = nn.BatchNorm2d
 BN_MOMENTUM = 0.01
@@ -253,7 +254,41 @@ blocks_dict = {
     'BASIC': BasicBlock,
     'BOTTLENECK': Bottleneck
 }
+class GCBModule(nn.Module):
+    def __init__(self, in_channels, out_channels, num_classes, config):
+        super(GCBModule, self).__init__()
+        type = config.NL.type
+        assert type in ['gcb', 'nl', 'nl_bn', 'nl_nowd', 'nl_nowd_mask', 'multi', 'multi_spatial', 'multi_relation', 'multihead_relation', 'glore', 'mask_nl']
+        inter_channels = in_channels // 4
+        self.conva = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, bias=False),
+                                   BatchNorm2d(inter_channels, momentum=BN_MOMENTUM),
+                                   nn.ReLU(inplace=True),)
+        if type == 'gcb':
+            self.ctb = ContextBlock(inter_channels, ratio=1./4)
+        elif type == 'nl':
+            self.ctb = NonLocal2d(inter_channels, inter_channels // 2, downsample=config.NL.downsample, use_out=config.NL.use_out, out_bn=config.NL.out_bn)
+        elif type == 'nl_bn':
+            self.ctb = NonLocal2d_bn(inter_channels, inter_channels // 2, downsample=config.NL.downsample, whiten_type=config.NL.whiten_type,
+                                     temperature=config.NL.temp, with_gc=config.NL.with_gc, use_out=config.NL.use_out, out_bn=config.NL.out_bn)
+        self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
+                                   BatchNorm2d(inter_channels, momentum=BN_MOMENTUM),
+                                   nn.ReLU(inplace=True),)
 
+        self.bottleneck = nn.Sequential(
+            nn.Conv2d(in_channels+inter_channels, out_channels, kernel_size=3, padding=1, dilation=1, bias=False),
+            BatchNorm2d(out_channels, momentum=BN_MOMENTUM),
+            nn.Dropout2d(0.1),
+            nn.Conv2d(out_channels, num_classes, kernel_size=1, stride=1, padding=0, bias=True)
+            )
+    def forward(self, x, recurrence=1):
+        output = self.conva(x)
+        if self.ctb is not None:
+            for i in range(recurrence):
+                output = self.ctb(output)
+        output = self.convb(output)
+
+        output = self.bottleneck(torch.cat([x, output], 1))
+        return output
 
 class HighResolutionNet(nn.Module):
 
@@ -325,6 +360,8 @@ class HighResolutionNet(nn.Module):
                 stride=1,
                 padding=1 if extra.FINAL_CONV_KERNEL == 3 else 0)
         )
+        self.head = GCBModule(config.NL.in_channels, config.NL.out_channels, config.DATASET.NUM_CLASSES, config)
+        self.use_nl=config.NL.USE
 
     def _make_transition_layer(
             self, num_channels_pre_layer, num_channels_cur_layer):
@@ -446,10 +483,14 @@ class HighResolutionNet(nn.Module):
         x1 = F.upsample(x[1], size=(x0_h, x0_w), mode='bilinear')
         x2 = F.upsample(x[2], size=(x0_h, x0_w), mode='bilinear')
         x3 = F.upsample(x[3], size=(x0_h, x0_w), mode='bilinear')
+        #print(x[0].shape,x[1].shape,x[2].shape,x[3].shape)
+        
 
         x = torch.cat([x[0], x1, x2, x3], 1)
-
-        x = self.last_layer(x)
+        if self.use_nl:
+            x=self.head(x)
+        else:
+            x = self.last_layer(x)
 
         return x
 
@@ -478,3 +519,4 @@ def get_seg_model(cfg, **kwargs):
     model.init_weights(cfg.MODEL.PRETRAINED)
 
     return model
+
