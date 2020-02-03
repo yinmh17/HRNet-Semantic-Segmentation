@@ -343,24 +343,25 @@ class HighResolutionNet(nn.Module):
             self.stage4_cfg, num_channels, multi_scale_output=True)
         
         last_inp_channels = np.int(np.sum(pre_stage_channels))
-
-        self.last_layer = nn.Sequential(
-            nn.Conv2d(
-                in_channels=last_inp_channels,
-                out_channels=last_inp_channels,
-                kernel_size=1,
-                stride=1,
-                padding=0),
-            BatchNorm2d(last_inp_channels, momentum=BN_MOMENTUM),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(
-                in_channels=last_inp_channels,
-                out_channels=config.DATASET.NUM_CLASSES,
-                kernel_size=extra.FINAL_CONV_KERNEL,
-                stride=1,
-                padding=1 if extra.FINAL_CONV_KERNEL == 3 else 0)
-        )
-        self.head = GCBModule(config.NL.in_channels, config.NL.out_channels, config.DATASET.NUM_CLASSES, config)
+        if not config.NL.USE:
+            self.last_layer = nn.Sequential(
+                nn.Conv2d(
+                    in_channels=last_inp_channels,
+                    out_channels=last_inp_channels,
+                    kernel_size=1,
+                    stride=1,
+                    padding=0),
+                BatchNorm2d(last_inp_channels, momentum=BN_MOMENTUM),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(
+                    in_channels=last_inp_channels,
+                    out_channels=config.DATASET.NUM_CLASSES,
+                    kernel_size=extra.FINAL_CONV_KERNEL,
+                    stride=1,
+                    padding=1 if extra.FINAL_CONV_KERNEL == 3 else 0)
+            )
+        if config.NL.USE:
+            self.head = GCBModule(config.NL.in_channels, config.NL.out_channels, config.DATASET.NUM_CLASSES, config)
         self.use_nl=config.NL.USE
 
     def _make_transition_layer(
