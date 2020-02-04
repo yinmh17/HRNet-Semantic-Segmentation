@@ -100,14 +100,14 @@ TEST:
   FLIP_TEST: false
   MULTI_SCALE: false
 NL:
-  USE: false
+  USE: true
   ASPP: false
   in_channels: 720
   out_channels: 512
   type: 'nl_bn'
   downsample: true
-  whiten_type: []
-  temp: 1.0
-  with_gc: false
+  whiten_type: ['channel']
+  temp: 0.05
+  with_gc: true
   use_out: false
   out_bn: false
