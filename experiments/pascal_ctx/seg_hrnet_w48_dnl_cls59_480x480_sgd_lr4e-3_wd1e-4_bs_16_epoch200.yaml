@@ -3,8 +3,8 @@ CUDNN:
   DETERMINISTIC: false
   ENABLED: true
 GPUS: (0,1,2,3)
-OUTPUT_DIR: 'data/HRNet-Pascal_ctx/output'
-LOG_DIR: 'data/HRNet-Pascal_ctx/log'
+OUTPUT_DIR: 'data/pascal_ctx/output'
+LOG_DIR: 'data/pascal_ctx/log'
 WORKERS: 4
 PRINT_FREQ: 100
 
