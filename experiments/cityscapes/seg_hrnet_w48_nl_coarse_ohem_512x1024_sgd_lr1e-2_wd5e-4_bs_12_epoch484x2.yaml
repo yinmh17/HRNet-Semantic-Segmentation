@@ -16,7 +16,7 @@ DATASET:
   NUM_CLASSES: 19
 MODEL:
   NAME: seg_hrnet
-  PRETRAINED: './output/cityscapes/seg_hrnet_w48_dnl_trainval_ohem_512x1024_sgd_lr1e-2_wd5e-4_bs_12_epoch484x2/checkpoint.pth.tar'
+  PRETRAINED: './output/cityscapes/seg_hrnet_w48_nl_trainval_ohem_512x1024_sgd_lr1e-2_wd5e-4_bs_12_epoch484x2/checkpoint.pth.tar'
   EXTRA:
     FINAL_CONV_KERNEL: 1
     STAGE1:
