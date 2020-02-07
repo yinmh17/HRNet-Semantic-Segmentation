@@ -101,7 +101,6 @@ TEST:
   MULTI_SCALE: false
 NL:
   USE: true
-  ASPP: false
   in_channels: 720
   out_channels: 512
   type: 'nl_bn'
