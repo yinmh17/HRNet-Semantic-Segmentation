@@ -76,11 +76,17 @@ def main():
         model_state_file = os.path.join(final_output_dir,
                                         'final_state.pth')
     logger.info('=> loading model from {}'.format(model_state_file))
-        
+    
     pretrained_dict = torch.load(model_state_file)
     model_dict = model.state_dict()
-    pretrained_dict = {k[6:]: v for k, v in pretrained_dict.items()
-                        if k[6:] in model_dict.keys()}
+    
+    if len(pretrained_dict) == 4:
+        pretrained_dict = {k[6:]: v for k, v in pretrained_dict['state_dict'].items()
+                            if k[6:] in model_dict.keys()}
+    else:
+        pretrained_dict = {k[6:]: v for k, v in pretrained_dict.items()
+                            if k[6:] in model_dict.keys()}
+        
     for k, _ in pretrained_dict.items():
         logger.info(
             '=> loading {} from pretrained model'.format(k))
