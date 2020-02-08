@@ -167,7 +167,7 @@ def testval(config, test_dataset, testloader, model,
                 if not os.path.exists(sv_path):
                     os.mkdir(sv_path)
                 test_dataset.save_pred(pred, sv_path, name)
-            print(pred)
+            #print(pred)
             if index % 100 == 0:
                 logging.info('processing: %d images' % index)
                 pos = confusion_matrix.sum(1)
