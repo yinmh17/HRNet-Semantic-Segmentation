@@ -12,8 +12,7 @@ DATASET:
   DATASET: cityscapes
   ROOT: 'data/'
   TEST_SET: 'list/cityscapes/val.lst'
-  TRAIN_SET: 'list/cityscapes/train.lst'
-  EXTRA_TRAIN_SET: 'list/cityscapes/trainval.lst'
+  TRAIN_SET: 'list/cityscapes/trainval.lst'
   NUM_CLASSES: 19
 MODEL:
   NAME: seg_hrnet
@@ -80,12 +79,10 @@ TRAIN:
   BATCH_SIZE_PER_GPU: 2
   SHUFFLE: true
   BEGIN_EPOCH: 0
-  END_EPOCH: 484
-  EXTRA_EPOCH: 484
+  END_EPOCH: 600
   RESUME: true
   OPTIMIZER: sgd
   LR: 0.01
-  EXTRA_LR: 0.001
   WD: 0.0005
   MOMENTUM: 0.9
   NESTEROV: false
