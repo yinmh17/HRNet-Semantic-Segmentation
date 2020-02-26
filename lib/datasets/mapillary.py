@@ -91,6 +91,6 @@ class Mapillary(BaseDataset):
 
         image, label = self.gen_sample(image, label,
                                        self.multi_scale, self.flip,
-                                       self.center_crop_test)
+                                       False)
 
         return image.copy(), label.copy(), np.array(size), name
