@@ -125,7 +125,7 @@ class _MultiHeadNonLocalNd(nn.Module):
             self.norm.inited = True
 
     def reset_lr_mult(self, lr_mult):
-        if lr_mult is not None:
+        if lr_mult is not False:
             for m in self.modules():
                 m.lr_mult = lr_mult
                 
