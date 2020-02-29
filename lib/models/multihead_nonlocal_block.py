@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from torch import nn
 from torch.nn import init
 import math
-from . import MatExpand
+from .modules.mat_expand import MatExpand
 
 
 class _MultiHeadNonLocalNd(nn.Module):
