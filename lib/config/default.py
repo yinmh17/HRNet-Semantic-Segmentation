@@ -130,7 +130,7 @@ _C.NL.pos_beta = 5.0
 _C.NL.use_saliency = ['s']
 _C.NL.saliency_alpha = 1.0
 _C.NL.use_gn = False
-_C.NL.lr_mult = None
+_C.NL.lr_mult = False
 _C.NL.nowd = ['nl'] 
 
 
