@@ -19,6 +19,7 @@ import torch.nn as nn
 import torch._utils
 import torch.nn.functional as F
 from .Nonlocal import NonLocal2d_bn
+from .multihead_nonlocal_block import MultiHeadNonLocal2d
 from torch.autograd import Variable
 BatchNorm2d = nn.BatchNorm2d
 BN_MOMENTUM = 0.01
@@ -270,6 +271,11 @@ class GCBModule(nn.Module):
         elif type == 'nl_bn':
             self.ctb = NonLocal2d_bn(inter_channels, inter_channels // 2, downsample=config.NL.downsample, whiten_type=config.NL.whiten_type,
                                      temperature=config.NL.temp, with_gc=config.NL.with_gc, use_out=config.NL.use_out, out_bn=config.NL.out_bn)
+        elif type == 'multi':
+            self.ctb = MultiHeadNonLocal2d(inter_channels, inter_channels // 2, downsample=config.NL.downsample, num_head=config.NL.downsample, 
+                                           distance=config.NL.distance, distance_delta=config.NL.distance_delta, distance_mean=config.NL.distance_mean, pos_embed_dim=config.NL.pos_embed_dim,
+                                           pos_feat_dim=config.NL.pos_feat_dim, pos_beta=config.NL.pos_beta, use_saliency=config.NL.use_saliency, saliency_alpha=config.NL.saliency_alpha, 
+                                           use_gn=config.NL.use_gn, lr_mult=config.NL.lr_mult, whiten_type=config.NL.whiten_type, tem=config.NL.temp, nowd=config.NL.nowd)
         self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
                                    BatchNorm2d(inter_channels, momentum=BN_MOMENTUM),
                                    nn.ReLU(inplace=True),)
@@ -304,7 +310,12 @@ class ASP_GCBModule(nn.Module):
         elif type == 'nl_bn':
             self.ctb = NonLocal2d_bn(out_features, out_features // 2, downsample=config.NL.downsample, whiten_type=config.NL.whiten_type,
                                      temperature=config.NL.temp, with_gc=config.NL.with_gc, use_out=config.NL.use_out, out_bn=config.NL.out_bn)
-                                     
+        elif type == 'multi':
+            self.ctb = MultiHeadNonLocal2d(out_channels, out_channels, downsample=config.NL.downsample, num_head=config.NL.downsample, 
+                                           distance=config.NL.distance, distance_delta=config.NL.distance_delta, distance_mean=config.NL.distance_mean, pos_embed_dim=config.NL.pos_embed_dim,
+                                           pos_feat_dim=config.NL.pos_feat_dim, pos_beta=config.NL.pos_beta, use_saliency=config.NL.use_saliency, saliency_alpha=config.NL.saliency_alpha, 
+                                           use_gn=config.NL.use_gn, lr_mult=config.NL.lr_mult, whiten_type=config.NL.whiten_type, tem=config.NL.temp, nowd=config.NL.nowd)
+            
         self.context = nn.Sequential(nn.Conv2d(features, out_features, kernel_size=3, padding=1, dilation=1, bias=True),
                                        BatchNorm2d(out_features, momentum=BN_MOMENTUM),
                                        nn.ReLU(inplace=True),
