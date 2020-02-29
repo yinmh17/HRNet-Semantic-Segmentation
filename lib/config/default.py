@@ -120,6 +120,18 @@ _C.NL.temp = 0.05
 _C.NL.with_gc = True
 _C.NL.use_out = False
 _C.NL.out_bn = False
+_C.NL.num_head = 1
+_C.NL.distance = 'dot'
+_C.NL.distance_delta = 1
+_C.NL.distance_mean = False
+_C.NL.pos_feat_dim = 32
+_C.NL.pos_embed_dim = 32
+_C.NL.pos_beta = 5.0
+_C.NL.use_saliency = ['s']
+_C.NL.saliency_alpha = 1.0
+_C.NL.use_gn = False
+_C.NL.lr_mult = None
+_C.NL.nowd = ['nl'] 
 
 
 def update_config(cfg, args):
