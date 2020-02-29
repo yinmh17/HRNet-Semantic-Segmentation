@@ -311,7 +311,7 @@ class ASP_GCBModule(nn.Module):
             self.ctb = NonLocal2d_bn(out_features, out_features // 2, downsample=config.NL.downsample, whiten_type=config.NL.whiten_type,
                                      temperature=config.NL.temp, with_gc=config.NL.with_gc, use_out=config.NL.use_out, out_bn=config.NL.out_bn)
         elif type == 'multi':
-            self.ctb = MultiHeadNonLocal2d(out_channels, out_channels, downsample=config.NL.downsample, num_head=config.NL.downsample, 
+            self.ctb = MultiHeadNonLocal2d(out_features, out_features, downsample=config.NL.downsample, num_head=config.NL.downsample, 
                                            distance=config.NL.distance, distance_delta=config.NL.distance_delta, distance_mean=config.NL.distance_mean, pos_embed_dim=config.NL.pos_embed_dim,
                                            pos_feat_dim=config.NL.pos_feat_dim, pos_beta=config.NL.pos_beta, use_saliency=config.NL.use_saliency, saliency_alpha=config.NL.saliency_alpha, 
                                            use_gn=config.NL.use_gn, lr_mult=config.NL.lr_mult, whiten_type=config.NL.whiten_type, tem=config.NL.temp, nowd=config.NL.nowd)
@@ -320,25 +320,25 @@ class ASP_GCBModule(nn.Module):
                                        BatchNorm2d(out_features, momentum=BN_MOMENTUM),
                                        nn.ReLU(inplace=True),
                                        self.ctb)
-        self.conv2 = nn.Sequential(nn.Conv2d(features, out_features, kernel_size=1, padding=0, dilation=1, bias=False),
-                                   BatchNorm2d(out_features, momentum=BN_MOMENTUM),
+        self.conv2 = nn.Sequential(nn.Conv2d(features, out_features//2, kernel_size=1, padding=0, dilation=1, bias=False),
+                                   BatchNorm2d(out_features//2, momentum=BN_MOMENTUM),
                                    nn.ReLU(inplace=True)
                                    )
-        self.conv3 = nn.Sequential(nn.Conv2d(features, out_features, kernel_size=3, padding=dilations[0], dilation=dilations[0], bias=False),
-                                   BatchNorm2d(out_features, momentum=BN_MOMENTUM),
+        self.conv3 = nn.Sequential(nn.Conv2d(features, out_features//2, kernel_size=3, padding=dilations[0], dilation=dilations[0], bias=False),
+                                   BatchNorm2d(out_features//2, momentum=BN_MOMENTUM),
                                    nn.ReLU(inplace=True)
                                    )
-        self.conv4 = nn.Sequential(nn.Conv2d(features, out_features, kernel_size=3, padding=dilations[1], dilation=dilations[1], bias=False),
-                                   BatchNorm2d(out_features, momentum=BN_MOMENTUM),
+        self.conv4 = nn.Sequential(nn.Conv2d(features, out_features//2, kernel_size=3, padding=dilations[1], dilation=dilations[1], bias=False),
+                                   BatchNorm2d(out_features//2, momentum=BN_MOMENTUM),
                                    nn.ReLU(inplace=True)
                                    )
-        self.conv5 = nn.Sequential(nn.Conv2d(features, out_features, kernel_size=3, padding=dilations[2], dilation=dilations[2], bias=False),
-                                   BatchNorm2d(out_features, momentum=BN_MOMENTUM),
+        self.conv5 = nn.Sequential(nn.Conv2d(features, out_features//2, kernel_size=3, padding=dilations[2], dilation=dilations[2], bias=False),
+                                   BatchNorm2d(out_features//2, momentum=BN_MOMENTUM),
                                    nn.ReLU(inplace=True)
                                    )
 
         self.conv_bn_dropout = nn.Sequential(
-            nn.Conv2d(out_features * 5, 512, kernel_size=1, padding=0, dilation=1, bias=False),
+            nn.Conv2d(out_features * 3, 512, kernel_size=1, padding=0, dilation=1, bias=False),
             BatchNorm2d(512, momentum=BN_MOMENTUM),
             nn.Dropout2d(0.1),
             nn.Conv2d(512, num_classes, kernel_size=1, stride=1, padding=0, bias=True),
@@ -449,10 +449,10 @@ class HighResolutionNet(nn.Module):
             )
         elif config.NL.USE and config.NL.ASPP:
             self.head = nn.Sequential(
-                nn.Conv2d(config.NL.in_channels, config.NL.in_channels//2, kernel_size=3, stride=1, padding=1),
-                BatchNorm2d(config.NL.in_channels//2, momentum=BN_MOMENTUM),
+                nn.Conv2d(config.NL.in_channels, config.NL.in_channels, kernel_size=3, stride=1, padding=1),
+                BatchNorm2d(config.NL.in_channels, momentum=BN_MOMENTUM),
                 nn.ReLU(inplace=True),
-                ASP_GCBModule(config.NL.in_channels//2, config.NL.out_channels, config.DATASET.NUM_CLASSES, config),
+                ASP_GCBModule(config.NL.in_channels, config.NL.out_channels, config.DATASET.NUM_CLASSES, config),
                 )
                 
         elif config.NL.USE:
