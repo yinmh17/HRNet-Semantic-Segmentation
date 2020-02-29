@@ -248,7 +248,7 @@ class _MultiHeadNonLocalNd(nn.Module):
         value = value.view(value.size(0), self.num_head, int(value.size(1) / self.num_head), -1)
         value = value.view(value.size(0) * self.num_head, *value.size()[2:])
 
-        if 'in' in self.whiten_type:
+        if 'channel' in self.whiten_type:
             key_mean = key.mean(2).unsqueeze(2)
             query_mean = query.mean(2).unsqueeze(2)
             key -= key_mean
