@@ -112,7 +112,7 @@ NL:
   use_out: false
   out_bn: false
   num_head: 8
-  use_saliency: ['S']
+  use_saliency: 'S'
   nowd: ['nl']
   pos_feat_dim: 32
   pos_embed_dim: 32
