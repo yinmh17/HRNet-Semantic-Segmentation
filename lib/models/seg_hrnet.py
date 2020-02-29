@@ -314,7 +314,7 @@ class ASP_GCBModule(nn.Module):
             self.ctb = MultiHeadNonLocal2d(out_features, out_features, downsample=config.NL.downsample, num_head=config.NL.downsample, 
                                            distance=config.NL.distance, distance_delta=config.NL.distance_delta, distance_mean=config.NL.distance_mean, pos_embed_dim=config.NL.pos_embed_dim,
                                            pos_feat_dim=config.NL.pos_feat_dim, pos_beta=config.NL.pos_beta, use_saliency=config.NL.use_saliency, saliency_alpha=config.NL.saliency_alpha, 
-                                           use_gn=config.NL.use_gn, lr_mult=config.NL.lr_mult, whiten_type=config.NL.whiten_type, tem=config.NL.temp, nowd=config.NL.nowd)
+                                           use_gn=config.NL.use_gn, lr_mult=config.NL.lr_mult, whiten_type=config.NL.whiten_type, temp=config.NL.temp, nowd=config.NL.nowd)
             
         self.context = nn.Sequential(nn.Conv2d(features, out_features, kernel_size=3, padding=1, dilation=1, bias=True),
                                        BatchNorm2d(out_features, momentum=BN_MOMENTUM),
