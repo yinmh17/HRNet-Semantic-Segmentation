@@ -199,12 +199,22 @@ def main():
     model = nn.parallel.DistributedDataParallel(
         model, device_ids=[args.local_rank], output_device=args.local_rank)
 
+    # nowd func
+    def get_params(tmp_model):
+        lr_wd_group = []
+        lr_nowd_group = []
+        for name, p in tmp_model.named_parameters():
+            if p.requires_grad:
+                if p.__dict__.get('wd', -1) == 0:
+                    lr_nowd_group.append(p)
+                    print(name)
+                else:
+                    lr_wd_group.append(p)
+        return [dict(params=lr_wd_group), dict(params=lr_nowd_group, weight_decay=0.0)]
+    
     # optimizer
     if config.TRAIN.OPTIMIZER == 'sgd':
-        optimizer = torch.optim.SGD([{'params':
-                                  filter(lambda p: p.requires_grad,
-                                         model.parameters()),
-                                  'lr': config.TRAIN.LR}],
+        optimizer = torch.optim.SGD(get_params(model),
                                 lr=config.TRAIN.LR,
                                 momentum=config.TRAIN.MOMENTUM,
                                 weight_decay=config.TRAIN.WD,
