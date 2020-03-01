@@ -2,15 +2,15 @@ CUDNN:
   BENCHMARK: true
   DETERMINISTIC: false
   ENABLED: true
-GPUS: (0,1,2,3)
+GPUS: (0,1,2,3,4,5,6,7)
 OUTPUT_DIR: 'output'
 LOG_DIR: 'log'
-WORKERS: 4
+WORKERS: 8
 PRINT_FREQ: 100
 
 DATASET:
   DATASET: cityscapes
-  ROOT: 'data/'
+  ROOT: '../data/'
   TEST_SET: 'list/cityscapes/val.lst'
   TRAIN_SET: 'list/cityscapes/traincoarse.lst'
   NUM_CLASSES: 19
@@ -73,13 +73,13 @@ LOSS:
   OHEMKEEP: 131072
 TRAIN:
   IMAGE_SIZE:
-  - 769
+  - 1024
   - 512
   BASE_SIZE: 2048
   BATCH_SIZE_PER_GPU: 2
   SHUFFLE: true
   BEGIN_EPOCH: 0
-  END_EPOCH: 15
+  END_EPOCH: 20
   RESUME: true
   OPTIMIZER: sgd
   LR: 0.001
@@ -94,7 +94,7 @@ TRAIN:
   SCALE_FACTOR: 16
 TEST:
   IMAGE_SIZE:
-  - 769
+  - 1024
   - 512
   BASE_SIZE: 2048
   BATCH_SIZE_PER_GPU: 2
@@ -108,7 +108,7 @@ NL:
   type: 'nl_bn'
   downsample: true
   whiten_type: ['channel']
-  temp: 0.05
+  temp: 0.1
   with_gc: true
   use_out: false
   out_bn: false
