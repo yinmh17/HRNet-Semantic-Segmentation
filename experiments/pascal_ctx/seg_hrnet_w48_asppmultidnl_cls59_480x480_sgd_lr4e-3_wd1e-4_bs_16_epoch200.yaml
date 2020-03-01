@@ -114,5 +114,5 @@ NL:
   num_head: 4
   use_saliency: 'S'
   nowd: ['nl']
-  pos_feat_dim: -1
-  pos_embed_dim: -1
+  pos_feat_dim: 16
+  pos_embed_dim: 16
