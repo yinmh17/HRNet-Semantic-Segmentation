@@ -21,8 +21,8 @@ _C.LOG_DIR = ''
 _C.GPUS = (0,)
 _C.WORKERS = 4
 _C.PRINT_FREQ = 20
-_C.AUTO_RESUME = False
-_C.PIN_MEMORY = True
+_C.AUTO_RESUME = True
+_C.PIN_MEMORY = False
 _C.RANK = 0
 
 # Cudnn related params
@@ -116,7 +116,7 @@ _C.NL.out_channels = 720
 _C.NL.type = 'nl_bn'
 _C.NL.downsample = False
 _C.NL.whiten_type = ['channel']
-_C.NL.temp = 0.05
+_C.NL.temp = 1.0
 _C.NL.with_gc = True
 _C.NL.use_out = False
 _C.NL.out_bn = False
