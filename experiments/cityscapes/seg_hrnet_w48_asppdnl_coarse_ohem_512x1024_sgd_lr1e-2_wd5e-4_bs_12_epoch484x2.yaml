@@ -10,13 +10,13 @@ PRINT_FREQ: 100
 
 DATASET:
   DATASET: cityscapes
-  ROOT: 'data/'
+  ROOT: '../data/'
   TEST_SET: 'list/cityscapes/val.lst'
   TRAIN_SET: 'list/cityscapes/traincoarse.lst'
   NUM_CLASSES: 19
 MODEL:
   NAME: seg_hrnet
-  PRETRAINED: './output/cityscapes/seg_hrnet_w48_dnl_trainval_ohem_512x1024_sgd_lr1e-2_wd5e-4_bs_12_epoch484x2/checkpoint.pth.tar'
+  PRETRAINED: './output/cityscapes/seg_hrnet_w48_dnl_trainval_ohem_512x1024_sgd_lr1e-2_wd5e-4_bs_12_epoch484x2/final_state.pth'
   EXTRA:
     FINAL_CONV_KERNEL: 1
     STAGE1:
@@ -73,7 +73,7 @@ LOSS:
   OHEMKEEP: 131072
 TRAIN:
   IMAGE_SIZE:
-  - 769
+  - 1024
   - 512
   BASE_SIZE: 2048
   BATCH_SIZE_PER_GPU: 2
@@ -94,7 +94,7 @@ TRAIN:
   SCALE_FACTOR: 16
 TEST:
   IMAGE_SIZE:
-  - 769
+  - 1024
   - 512
   BASE_SIZE: 2048
   BATCH_SIZE_PER_GPU: 2
@@ -108,7 +108,7 @@ NL:
   type: 'nl_bn'
   downsample: true
   whiten_type: ['channel']
-  temp: 0.05
+  temp: 0.1
   with_gc: true
   use_out: false
   out_bn: false
