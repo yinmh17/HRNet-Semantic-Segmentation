@@ -299,16 +299,16 @@ class _MultiHeadNonLocalNd(nn.Module):
         if 'renorm' in self.distance:
             att_map = sim_map
         else:
-            att_map = self.softmax(sim_map)
+            sim_map = self.softmax(sim_map)
 
         if "A" in self.use_saliency:
             att_map = att_map * saliency * saliency_down
 
         if "S" in self.use_saliency:
-            att_map = att_map + saliency_down
+            sim_map = sim_map + saliency_down
 
         # [N x nHead, T x H x W, C/nHead]
-        out = torch.bmm(att_map, value.transpose(1, 2))
+        out = torch.bmm(sim_map, value.transpose(1, 2))
         # [N x nHead, C/nHead, T x H x W]
         out = out.transpose(1, 2)
         # [N, C/nHead*nHead, T,  H, W]
