@@ -73,8 +73,8 @@ LOSS:
   OHEMKEEP: 131072
 TRAIN:
   IMAGE_SIZE:
-  - 480
-  - 480
+  - 520
+  - 520
   BASE_SIZE: 520
   BATCH_SIZE_PER_GPU: 4
   SHUFFLE: true
@@ -93,8 +93,8 @@ TRAIN:
   SCALE_FACTOR: 16
 TEST:
   IMAGE_SIZE:
-  - 480
-  - 480
+  - 520
+  - 520
   BASE_SIZE: 520
   BATCH_SIZE_PER_GPU: 16
   FLIP_TEST: false
@@ -107,7 +107,7 @@ NL:
   type: 'nl_bn'
   downsample: true
   whiten_type: ['channel']
-  temp: 0.05
+  temp: 0.1
   with_gc: true
   use_out: false
   out_bn: false
