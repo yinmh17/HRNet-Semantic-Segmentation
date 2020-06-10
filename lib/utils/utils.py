@@ -139,8 +139,9 @@ def get_confusion_matrix(label, pred, size, num_class, ignore=-1):
                                  i_pred] = label_count[cur_index]
     return confusion_matrix
 
-def adjust_learning_rate(optimizer, base_lr, max_iters, 
+def adjust_learning_rate(optimizer, base_lr, base_lr_mult, max_iters, 
         cur_iters, power=0.9):
     lr = base_lr*((1-float(cur_iters)/max_iters)**(power))
-    optimizer.param_groups[0]['lr'] = lr
+    for i, lr_mult in enumerate(base_lr_mult):
+        optimizer.param_groups[i]['lr'] = lr * lr_mult
     return lr

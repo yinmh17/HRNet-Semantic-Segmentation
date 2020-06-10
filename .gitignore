@@ -1,0 +1,5 @@
+data/pascal_ctx
+__pycache__
+*.pyc
+*.so
+lib/models/build

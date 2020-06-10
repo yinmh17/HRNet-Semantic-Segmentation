@@ -35,7 +35,7 @@ def reduce_tensor(inp):
         dist.reduce(reduced_inp, dst=0)
     return reduced_inp
 
-def train(config, epoch, num_epoch, epoch_iters, base_lr, num_iters,
+def train(config, epoch, num_epoch, epoch_iters, base_lr, base_lr_mult, num_iters,
          trainloader, optimizer, model, writer_dict, device):
     
     # Training
@@ -72,6 +72,7 @@ def train(config, epoch, num_epoch, epoch_iters, base_lr, num_iters,
 
         lr = adjust_learning_rate(optimizer,
                                   base_lr,
+                                  base_lr_mult,
                                   num_iters,
                                   i_iter+cur_iters)
 

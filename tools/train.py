@@ -57,6 +57,7 @@ def main():
 
     logger, final_output_dir, tb_log_dir = create_logger(
         config, args.cfg, 'train')
+    print(final_output_dir)
 
     logger.info(pprint.pformat(args))
     logger.info(config)
@@ -200,21 +201,41 @@ def main():
         model, device_ids=[args.local_rank], output_device=args.local_rank)
 
     # nowd func
-    def get_params(tmp_model):
+    def get_params(tmp_model, base_lr, flag_lr_mult10):
         lr_wd_group = []
         lr_nowd_group = []
+        lr_wd_lr10_group = []
+        lr_nowd_lr10_group = []
         for name, p in tmp_model.named_parameters():
             if p.requires_grad:
-                if p.__dict__.get('wd', -1) == 0:
-                    lr_nowd_group.append(p)
-                    print(name)
+                if flag_lr_mult10:
+                    if 'head' in name:
+                        if p.__dict__.get('wd', -1) == 0:
+                            lr_nowd_lr10_group.append(p)
+                            print("wd_mult0 lr_mult10:", name)
+                        else:
+                            lr_wd_lr10_group.append(p)
+                            print("wd_mult1 lr_mult10:", name)
+                    else:
+                        if p.__dict__.get('wd', -1) == 0:
+                            raise ValueError('wd=0 only should be used in head.dnl')
+                        else:
+                            lr_wd_group.append(p)
                 else:
-                    lr_wd_group.append(p)
-        return [dict(params=lr_wd_group), dict(params=lr_nowd_group, weight_decay=0.0)]
+                    if p.__dict__.get('wd', -1) == 0:
+                        lr_nowd_group.append(p)
+                        print("wd_mult0 lr_mult1:", name)
+                    else:
+                        lr_wd_group.append(p)
+        if flag_lr_mult10:
+            return [dict(params=lr_wd_group), dict(params=lr_wd_lr10_group, lr=base_lr*10.0), dict(params=lr_nowd_lr10_group, lr=base_lr*10.0, weight_decay=0.0)], [1.0, 10.0, 10.0]
+        else:
+            return [dict(params=lr_wd_group), dict(params=lr_nowd_group, weight_decay=0.0)], [1.0, 1.0]
     
     # optimizer
     if config.TRAIN.OPTIMIZER == 'sgd':
-        optimizer = torch.optim.SGD(get_params(model),
+        all_params, base_lr_mult = get_params(model, config.TRAIN.LR, config.TRAIN.HEAD_LR_MULT10)
+        optimizer = torch.optim.SGD(all_params,
                                 lr=config.TRAIN.LR,
                                 momentum=config.TRAIN.MOMENTUM,
                                 weight_decay=config.TRAIN.WD,
@@ -251,12 +272,12 @@ def main():
         if epoch >= config.TRAIN.END_EPOCH:
             train(config, epoch-config.TRAIN.END_EPOCH, 
                   config.TRAIN.EXTRA_EPOCH, epoch_iters, 
-                  config.TRAIN.EXTRA_LR, extra_iters, 
+                  config.TRAIN.EXTRA_LR, base_lr_mult, extra_iters, 
                   extra_trainloader, optimizer, model, 
                   writer_dict, device)
         else:
             train(config, epoch, config.TRAIN.END_EPOCH, 
-                  epoch_iters, config.TRAIN.LR, num_iters,
+                  epoch_iters, config.TRAIN.LR, base_lr_mult, num_iters,
                   trainloader, optimizer, model, writer_dict,
                   device)
 

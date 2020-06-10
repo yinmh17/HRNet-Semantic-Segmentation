@@ -83,6 +83,7 @@ TRAIN:
   RESUME: true
   OPTIMIZER: sgd
   LR: 0.001
+  HEAD_LR_MULT10: true
   WD: 0.0001
   MOMENTUM: 0.9
   NESTEROV: false
